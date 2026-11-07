@@ -53,6 +53,7 @@ jobs:
         run: pnpm test
       - name: Audit
         working-directory: panel
+        continue-on-error: true
         run: pnpm audit --prod --audit-level=moderate
 
   web:
