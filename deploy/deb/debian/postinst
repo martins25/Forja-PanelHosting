@@ -24,8 +24,8 @@ configure)
     mkdir -p /srv/forja/accounts /srv/forja/cloudflared /etc/forja \
         /var/lib/forja/restic /var/lib/forja/exports /run/forja
 
-    chown root:root /etc/forja
-    chmod 0700 /etc/forja
+    chown root:forja-agent /etc/forja
+    chmod 0750 /etc/forja
     chown forja:forja /var/lib/forja
     chmod 0750 /var/lib/forja
     chown root:forja-agent /run/forja

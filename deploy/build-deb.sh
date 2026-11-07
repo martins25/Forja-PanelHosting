@@ -152,8 +152,8 @@ build_package() {
     "$pkg_root"/etc/containers/containers.conf.d/50-forja.conf \
     "$pkg_root"/etc/sysctl.d/99-forja-userns.conf
   find "$pkg_root" -type d -exec chmod 0755 {} +
-  # /etc/forja holds keys: the postinst enforces 0700, but ship it that way too
-  chmod 0700 "$pkg_root/etc/forja"
+  # /etc/forja holds keys: the postinst enforces 0750 root:forja-agent
+  chmod 0750 "$pkg_root/etc/forja"
 
   # Package documentation
   install -d "$pkg_root/usr/share/doc/forja"
