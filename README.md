@@ -30,6 +30,10 @@ Panel de hosting para gestionar un VPS con varias webs aisladas (Node.js, PHP, P
 Descarga el `.deb` desde [Releases](https://github.com/martins25/Forja-PanelHosting/releases/latest) e instala:
 
 ```bash
+# Node.js 22 (Debian/Ubuntu no lo traen por defecto)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
+
+# Instalar Forja (resuelve el resto de dependencias)
 sudo apt install ./forja_0.1.0_amd64.deb
 ```
 
