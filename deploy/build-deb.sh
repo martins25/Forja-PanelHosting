@@ -58,6 +58,7 @@ build_artifacts() {
   # pnpm refuses to run install scripts (native builds) unless allowed. Both spellings:
   # `allowBuilds` (pnpm >= 11) and `onlyBuiltDependencies` (pnpm 10).
   cat > "$api_work/pnpm-workspace.yaml" <<'YAML'
+packages: ["."]
 allowBuilds:
   argon2: true
   better-sqlite3: true
@@ -95,6 +96,7 @@ YAML
   mkdir -p "$web_work"
   tar -C panel/web --exclude=./node_modules --exclude=./dist -cf - . | tar -C "$web_work" -xf -
   cat > "$web_work/pnpm-workspace.yaml" <<'YAML'
+packages: ["."]
 allowBuilds:
   esbuild: true
 onlyBuiltDependencies:
