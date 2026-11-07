@@ -1,0 +1,1 @@
+ALTER TABLE sites ADD COLUMN webhook_secret_enc TEXT;

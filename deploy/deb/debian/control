@@ -1,0 +1,34 @@
+Source: forja
+Section: web
+Priority: optional
+Maintainer: M4RTINS <m4rtins@users.noreply.github.com>
+Build-Depends: debhelper (>= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: forja
+Architecture: amd64
+Depends: nodejs (>= 22),
+ podman,
+ caddy,
+ restic,
+ sqlite3,
+ git,
+ systemd,
+ iproute2,
+ slirp4netns,
+ uidmap,
+ fuse-overlayfs
+Recommends: nftables, unattended-upgrades
+Description: Self-hosted web hosting panel for a VPS
+ Forja manages several isolated websites (Node, PHP, Python, static or
+ Dockerfile) on a single VPS and publishes them through Cloudflare tunnels,
+ so no inbound port has to be opened.
+ .
+ It has two roles: administrator (sees everything) and client (only their own
+ accounts). The package ships the privileged agent (forja-agent, runs as root
+ and listens only on a Unix socket), the unprivileged panel API and the web
+ interface, plus the systemd units and the container/Caddy drop-ins they need.
+ .
+ Note: Cloudflare DNS-01 certificates need a Caddy build that includes the
+ caddy-dns/cloudflare module; the stock Debian caddy package does not.

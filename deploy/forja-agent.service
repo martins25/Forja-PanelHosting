@@ -1,0 +1,28 @@
+[Unit]
+Description=Forja Agent
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/forja-agent
+Restart=on-failure
+RestartSec=5
+
+# Security hardening
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+NoNewPrivileges=true
+ReadWritePaths=/srv/forja /etc/forja /var/lib/forja /run/forja
+RuntimeDirectory=forja
+RuntimeDirectoryMode=0755
+
+# The agent needs root to manage users, Podman, Caddy, etc.
+User=root
+Group=root
+
+Environment=FORJA_SOCKET=/run/forja/agent.sock
+Environment=FORJA_AUDIT_LOG=/var/lib/forja/audit.jsonl
+
+[Install]
+WantedBy=multi-user.target

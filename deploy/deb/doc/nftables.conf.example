@@ -1,0 +1,30 @@
+#!/usr/sbin/nft -f
+# Example firewall for a Forja VPS: no inbound ports (Cloudflare tunnels are outbound only).
+# Same ruleset as deploy/install.sh. The package does NOT install it over /etc/nftables.conf:
+#   sudo cp /usr/share/doc/forja/examples/nftables.conf.example /etc/nftables.conf
+#   sudo systemctl enable --now nftables
+# WARNING: it drops all inbound traffic, SSH included. Open your management port first
+# (e.g. add `tcp dport 22 accept` to the input chain) if you do not use another access path.
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority 0; policy drop;
+
+    # Allow loopback
+    iif lo accept
+
+    # Allow established/related connections
+    ct state established,related accept
+
+    # Drop everything else (no open inbound ports)
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+  }
+
+  chain output {
+    type filter hook output priority 0; policy accept;
+  }
+}

@@ -1,0 +1,33 @@
+#!/bin/sh
+# prerm for forja: stop the services before their files go away.
+# On upgrade the new postinst restarts them.
+set -e
+
+have_systemd() { [ -d /run/systemd/system ]; }
+
+case "$1" in
+remove | deconfigure)
+    if have_systemd; then
+        # forja-ingress last: caddy.service Requires= it (see the caddy drop-in), so stopping
+        # it also stops Caddy.
+        systemctl stop forja-panel.service forja-agent.service forja-ingress.service || true
+        systemctl disable forja-panel.service forja-agent.service forja-ingress.service \
+            >/dev/null 2>&1 || true
+    fi
+    ;;
+
+upgrade)
+    if have_systemd; then
+        systemctl stop forja-panel.service forja-agent.service || true
+    fi
+    ;;
+
+failed-upgrade) ;;
+
+*)
+    echo "prerm called with unknown argument '$1'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

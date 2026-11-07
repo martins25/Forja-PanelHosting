@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+# Alternative build path with dpkg-buildpackage (needs debhelper). The supported path is
+# deploy/build-deb.sh, which uses dpkg-deb directly. To use this one, from the repo root:
+#   ln -s deploy/deb/debian debian && dpkg-buildpackage -b -us -uc
+# (dh expects `debian/` at the source root.)
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	./deploy/build-deb.sh --artifacts-only
+
+override_dh_auto_test:
+override_dh_auto_install:
+override_dh_auto_clean:
+	rm -rf build/deb
+
+# Go binary is already stripped; the node native modules are prebuilt: nothing to strip or
+# to scan with shlibdeps. Units are enabled by hand in postinst (see the comments there).
+override_dh_strip:
+override_dh_shlibdeps:
+override_dh_dwz:
+override_dh_installsystemd:
+override_dh_installinit:

@@ -1,0 +1,14 @@
+# Paths are relative to the repository root. `deploy/build-deb.sh` produces build/deb/*
+# and, for the dpkg-deb path, reads this same file (same semantics as dh_install:
+# "<source> <destination directory inside the package>").
+build/deb/forja-agent usr/local/bin
+build/deb/api opt/forja/panel
+build/deb/web opt/forja/panel
+build/deb/caddy.service.d etc/systemd/system
+build/deb/containers.conf.d etc/containers
+deploy/forja-agent.service lib/systemd/system
+deploy/forja-panel.service lib/systemd/system
+deploy/forja-ingress.service lib/systemd/system
+deploy/check-isolation.sh usr/share/forja
+deploy/deb/etc/sysctl.d/99-forja-userns.conf etc/sysctl.d
+deploy/deb/doc/nftables.conf.example usr/share/doc/forja/examples

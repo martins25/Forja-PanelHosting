@@ -1,0 +1,127 @@
+#!/bin/sh
+# postinst for forja. Mirrors deploy/install.sh (users, directories, keys, units), minus the parts
+# that apt/dpkg now handle (packages) or that are too invasive for a package (nftables.conf).
+set -e
+
+API_DIR=/opt/forja/panel/api
+DB_PATH=/var/lib/forja/panel.db
+SECRETS_DROPIN_DIR=/etc/systemd/system/forja-panel.service.d
+
+have_systemd() { [ -d /run/systemd/system ]; }
+
+case "$1" in
+configure)
+    # --- Users and groups ---
+    getent group forja-agent >/dev/null || groupadd --system forja-agent
+    if ! getent passwd forja >/dev/null; then
+        useradd --system --shell /usr/sbin/nologin --home-dir /var/lib/forja \
+            --groups forja-agent forja
+    elif ! id -nG forja | tr ' ' '\n' | grep -qx forja-agent; then
+        usermod -aG forja-agent forja
+    fi
+
+    # --- Directories (the empty ones are created by the package, see forja.dirs) ---
+    mkdir -p /srv/forja/accounts /srv/forja/cloudflared /etc/forja \
+        /var/lib/forja/restic /var/lib/forja/exports /run/forja
+
+    chown root:root /etc/forja
+    chmod 0700 /etc/forja
+    chown forja:forja /var/lib/forja
+    chmod 0750 /var/lib/forja
+    chown root:forja-agent /run/forja
+    chmod 0750 /run/forja
+    # Root-owned home of the tunnel-token env files (outside every account home)
+    chown root:root /srv/forja/cloudflared
+    chmod 0711 /srv/forja/cloudflared
+
+    # --- Master key (agent: encrypts/decrypts secrets). Never overwritten. ---
+    if [ ! -f /etc/forja/master.key ]; then
+        (umask 077 && head -c 32 /dev/urandom > /etc/forja/master.key)
+        chmod 0600 /etc/forja/master.key
+        chown root:root /etc/forja/master.key
+        echo "forja: generated /etc/forja/master.key"
+    fi
+
+    # --- App key (panel: sessions and TOTP). Never overwritten. ---
+    if [ ! -f /etc/forja/app.key ]; then
+        (umask 077 && head -c 32 /dev/urandom > /etc/forja/app.key)
+        chmod 0640 /etc/forja/app.key
+        chown root:forja-agent /etc/forja/app.key
+        echo "forja: generated /etc/forja/app.key"
+    fi
+
+    # --- FORJA_SECRET_KEY (panel: AES-256-GCM key for secrets stored in SQLite) ---
+    # Goes in a root-only systemd drop-in, as docs/OPERACION.md §3.1 describes. Never overwritten
+    # (changing it would make the encrypted columns of panel.db unreadable).
+    if [ ! -f "$SECRETS_DROPIN_DIR/secrets.conf" ]; then
+        mkdir -p "$SECRETS_DROPIN_DIR"
+        secret=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')
+        (umask 077 && printf '[Service]\nEnvironment=FORJA_SECRET_KEY=%s\n' "$secret" \
+            > "$SECRETS_DROPIN_DIR/secrets.conf")
+        chmod 0600 "$SECRETS_DROPIN_DIR/secrets.conf"
+        chown root:root "$SECRETS_DROPIN_DIR/secrets.conf"
+        unset secret
+        echo "forja: generated $SECRETS_DROPIN_DIR/secrets.conf (FORJA_SECRET_KEY)"
+    fi
+
+    # --- Kernel tuning for rootless Podman (key only exists on Debian kernels: -e ignores it) ---
+    sysctl -q -e -p /etc/sysctl.d/99-forja-userns.conf >/dev/null 2>&1 || true
+
+    # --- Database migrations (idempotent: first install creates panel.db, upgrades apply new ones) ---
+    if [ -f "$API_DIR/dist/db/connection.js" ]; then
+        if [ -n "$2" ] && [ -f "$DB_PATH" ] && command -v sqlite3 >/dev/null 2>&1; then
+            backup="$DB_PATH.pre-$2"
+            if [ ! -e "$backup" ]; then
+                sqlite3 "$DB_PATH" ".backup '$backup'"
+                chown forja:forja "$backup"
+                chmod 0600 "$backup"
+                echo "forja: copy of panel.db before migrating: $backup"
+            fi
+        fi
+        runuser -u forja -- env DATABASE_URL="$DB_PATH" node --input-type=module -e \
+            "import('$API_DIR/dist/db/connection.js').then((m) => { m.migrate(); process.exit(0); })" \
+            || {
+                echo "forja: database migration FAILED; package left unconfigured (fix it and run: dpkg --configure forja)" >&2
+                exit 1
+            }
+    fi
+
+    # --- systemd units ---
+    if have_systemd; then
+        systemctl daemon-reload
+        systemctl enable forja-ingress.service forja-agent.service forja-panel.service >/dev/null 2>&1 || true
+        # Not caddy: it is the administrator's (it must be built with the Cloudflare DNS module).
+        # restart = start on first install, pick up the new binaries on upgrade.
+        systemctl restart forja-ingress.service forja-agent.service forja-panel.service \
+            || echo "forja: a service failed to start; check: systemctl status forja-agent forja-panel" >&2
+    fi
+
+    if [ -z "$2" ]; then
+        cat <<MSG
+
+forja: installed. Next steps (see /usr/share/doc/forja/ and docs/OPERACION.md):
+  1. Save OFF this server: /etc/forja/master.key, /etc/forja/app.key and
+     $SECRETS_DROPIN_DIR/secrets.conf. Without them backups and
+     the panel's encrypted data are unrecoverable.
+  2. Caddy must be a build with the caddy-dns/cloudflare module and be running:
+     systemctl enable --now caddy
+  3. Create the admin user:
+     cd $API_DIR && sudo -u forja DATABASE_URL=$DB_PATH \\
+       FORJA_APP_KEY=/etc/forja/app.key node dist/scripts/seed-admin.js
+  4. Firewall (optional): example in /usr/share/doc/forja/examples/nftables.conf.example
+  5. After creating the first account: /usr/share/forja/check-isolation.sh <slug>
+  Known pending items that affect operation: docs/OPERACION.md, appendix A.
+
+MSG
+    fi
+    ;;
+
+abort-upgrade | abort-remove | abort-deconfigure) ;;
+
+*)
+    echo "postinst called with unknown argument '$1'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

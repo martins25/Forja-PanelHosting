@@ -1,0 +1,20 @@
+# Dummy interface carrying the address cloudflared containers use to reach Caddy.
+# It is not loopback, so containers reach Caddy's ingress server but not the panel API or
+# Caddy's admin API (both bound to 127.0.0.1). Independent of the network manager in use.
+# Keep the address in sync with ForjaIngressAddr in agent/internal/actions.
+[Unit]
+Description=Forja ingress address (forja0)
+Before=caddy.service
+After=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/sbin/ip link del forja0
+ExecStart=/usr/sbin/ip link add forja0 type dummy
+ExecStart=/usr/sbin/ip addr add 10.255.0.1/32 dev forja0
+ExecStart=/usr/sbin/ip link set forja0 up
+ExecStop=/usr/sbin/ip link del forja0
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,26 @@
+[Unit]
+Description=Forja Panel API
+After=network.target forja-agent.service
+Requires=forja-agent.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /opt/forja/panel/api/dist/index.js
+Restart=on-failure
+RestartSec=5
+User=forja
+Group=forja-agent
+
+# Security hardening
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+ReadWritePaths=/var/lib/forja
+
+Environment=NODE_ENV=production
+Environment=FORJA_AGENT_SOCKET=/run/forja/agent.sock
+Environment=DATABASE_URL=/var/lib/forja/panel.db
+
+[Install]
+WantedBy=multi-user.target

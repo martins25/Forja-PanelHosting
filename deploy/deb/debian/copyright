@@ -1,0 +1,13 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: forja
+Source: https://github.com/m4rtins/forja
+
+Files: *
+Copyright: 2026 M4RTINS
+License: Proprietary
+ All rights reserved. The project has not been released under a free
+ license yet; no permission is granted to copy, modify or redistribute it
+ outside the owner's own servers.
+ .
+ FIXME: replace this stanza with the real license text before distributing the
+ package publicly.

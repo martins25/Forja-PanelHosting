@@ -1,0 +1,7 @@
+etc/forja
+opt/forja/panel
+srv/forja/accounts
+srv/forja/cloudflared
+var/lib/forja
+var/lib/forja/restic
+var/lib/forja/exports
