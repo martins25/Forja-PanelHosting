@@ -12,9 +12,7 @@ Panel de hosting para gestionar un VPS con varias webs aisladas (Node.js, PHP, P
 | **Acceso** | `root` en el servidor, con salida a internet |
 | **CPU / RAM** | 2 vCPU, 2 GB RAM mínimo (4 GB recomendado) |
 | **Disco** | 20 GB libres mínimo (depende del número de sitios) |
-| **Go** | 1.26+ (para compilar el agente) |
 | **Node.js** | 22+ |
-| **pnpm** | Cualquier versión reciente |
 | **Podman** | Rootless, con `slirp4netns`, `uidmap` y `fuse-overlayfs` |
 | **Caddy** | Compilado con el módulo `caddy-dns/cloudflare` (el Caddy de apt **no** sirve; compilar con xcaddy) |
 | **restic** | Para backups incrementales |
@@ -29,18 +27,24 @@ Panel de hosting para gestionar un VPS con varias webs aisladas (Node.js, PHP, P
 
 ### Opción A: paquete .deb (recomendado)
 
+Descarga el `.deb` desde [Releases](https://github.com/martins25/Forja-PanelHosting/releases/latest) e instala:
+
 ```bash
-# En la máquina de build (necesita Go, Node 22, pnpm, dpkg-deb)
+sudo apt install ./forja_0.1.0_amd64.deb
+```
+
+El paquete crea el usuario `forja`, genera las claves criptográficas, ejecuta las migraciones de la base de datos y habilita los servicios systemd. No necesitas Go, pnpm ni compilar nada.
+
+### Opción B: compilar desde el código
+
+```bash
+# Necesita Go 1.26+, Node 22, pnpm, dpkg-deb
 git clone https://github.com/martins25/Forja-PanelHosting.git && cd Forja-PanelHosting
 make deb
-
-# En el servidor
 sudo apt install ./dist/forja_0.1.0_amd64.deb
 ```
 
-El paquete crea el usuario `forja`, genera las claves criptográficas, ejecuta las migraciones de la base de datos y habilita los servicios systemd.
-
-### Opción B: instalación manual
+### Opción C: instalación manual
 
 ```bash
 git clone https://github.com/martins25/Forja-PanelHosting.git /opt/forja/src && cd /opt/forja/src
