@@ -1,7 +1,9 @@
 import { buildApp } from "./app.js";
 import { AgentClient } from "./agent/client.js";
 import { migrate } from "./db/connection.js";
+import { loadAppKey } from "./auth/crypto.js";
 
+loadAppKey();
 migrate();
 
 const agentSocket = process.env.FORJA_AGENT_SOCKET ?? "/run/forja/agent.sock";

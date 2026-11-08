@@ -1,3 +1,9 @@
+forja (0.1.2) unstable; urgency=medium
+
+  * Fix: cargar app key al iniciar (TOTP enable devolvía 500).
+
+ -- Adrián Martíns <adrianmb1125@gmail.com>  Sun, 08 Nov 2026 14:00:00 +0000
+
 forja (0.1.1) unstable; urgency=medium
 
   * Login con campo de email cuando Cloudflare Access no está configurado.
