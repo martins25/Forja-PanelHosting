@@ -17,7 +17,7 @@ interface User {
 interface AuthState {
   user: User | null;
   isLoading: boolean;
-  login: (password: string) => Promise<LoginResult>;
+  login: (password: string, email?: string) => Promise<LoginResult>;
   loginTotp: (code: string, totpToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -45,7 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = useCallback(async (password: string): Promise<LoginResult> => {
+  const login = useCallback(async (password: string, email?: string): Promise<LoginResult> => {
+    const body: Record<string, string> = { password };
+    if (email) body.email = email;
     const data = await api<{
       status: string;
       user?: User;
@@ -53,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       totpToken?: string;
     }>("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ password }),
+      body: JSON.stringify(body),
     });
 
     if (data.status === "totp_required") {

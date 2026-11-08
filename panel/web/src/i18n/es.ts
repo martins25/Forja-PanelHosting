@@ -4,6 +4,7 @@ export const es = {
   },
   auth: {
     loginTitle: "Iniciar sesión",
+    email: "Correo electrónico",
     password: "Contraseña",
     login: "Entrar",
     logout: "Cerrar sesión",

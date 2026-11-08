@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { timingSafeEqual } from "node:crypto";
 import { eq, and } from "drizzle-orm";
-import { verifyAccessJWT, type AccessClaims } from "./access.js";
+import { verifyAccessJWT, isAccessConfigured, type AccessClaims } from "./access.js";
 import {
   getSession,
   getSessionCookieName,
@@ -22,16 +22,19 @@ export async function requireAccess(
   reply: FastifyReply,
 ): Promise<void> {
   const token = request.headers["cf-access-jwt-assertion"] as string | undefined;
-  if (!token) {
-    reply.code(401).send({ error: { code: "NO_ACCESS_TOKEN", message: "Missing Cloudflare Access token" } });
+
+  if (token) {
+    try {
+      request.accessClaims = await verifyAccessJWT(token);
+    } catch {
+      reply.code(401).send({ error: { code: "INVALID_ACCESS_TOKEN", message: "Invalid Cloudflare Access token" } });
+    }
     return;
   }
 
-  try {
-    request.accessClaims = await verifyAccessJWT(token);
-  } catch {
-    reply.code(401).send({ error: { code: "INVALID_ACCESS_TOKEN", message: "Invalid Cloudflare Access token" } });
-  }
+  if (!isAccessConfigured()) return;
+
+  reply.code(401).send({ error: { code: "NO_ACCESS_TOKEN", message: "Missing Cloudflare Access token" } });
 }
 
 export async function requireSession(

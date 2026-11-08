@@ -1,0 +1,28 @@
+# Forja — default configuration.
+# Serves the panel on port 80 (all interfaces) so it is reachable from the
+# local network by IP. Once Cloudflare Access and a tunnel are configured the
+# caddy.sync action pushes a JSON config that replaces this file's effect; this
+# Caddyfile stays on disk but is only active again if the JSON config is cleared
+# (caddy reload).
+#
+# Auto-HTTPS is off because the panel is accessed by IP on the LAN; Caddy would
+# fail ACME for a bare IP. When a public domain points here (via tunnel), TLS
+# is handled by Cloudflare, not by Caddy.
+
+{
+	auto_https off
+}
+
+:80 {
+	root * /opt/forja/panel/web/dist
+	try_files {path} /index.html
+	file_server
+
+	reverse_proxy /api/* 127.0.0.1:7000
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}

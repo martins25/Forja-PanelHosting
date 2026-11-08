@@ -22,6 +22,10 @@ export function configureAccess(config: AccessConfig): void {
   cachedConfig = config;
 }
 
+export function isAccessConfigured(): boolean {
+  return cachedConfig !== null;
+}
+
 export function resetAccess(): void {
   jwks = null;
   cachedConfig = null;

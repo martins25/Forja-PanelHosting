@@ -96,6 +96,18 @@ configure)
             || echo "forja: a service failed to start; check: systemctl status forja-agent forja-panel" >&2
     fi
 
+    # --- Default Caddyfile (first install only) ---
+    if [ -z "$2" ] && [ -d /etc/caddy ]; then
+        if [ ! -f /etc/caddy/Caddyfile ] || grep -q 'localhost' /etc/caddy/Caddyfile 2>/dev/null; then
+            cp /usr/share/forja/Caddyfile /etc/caddy/Caddyfile
+            echo "forja: installed default Caddyfile (panel on :80, all interfaces)"
+        fi
+        if have_systemd; then
+            systemctl enable caddy >/dev/null 2>&1 || true
+            systemctl reload-or-restart caddy >/dev/null 2>&1 || true
+        fi
+    fi
+
     if [ -z "$2" ]; then
         cat <<MSG
 
@@ -103,11 +115,10 @@ forja: installed. Next steps (see /usr/share/doc/forja/ and docs/OPERACION.md):
   1. Save OFF this server: /etc/forja/master.key, /etc/forja/app.key and
      $SECRETS_DROPIN_DIR/secrets.conf. Without them backups and
      the panel's encrypted data are unrecoverable.
-  2. Caddy must be a build with the caddy-dns/cloudflare module and be running:
-     systemctl enable --now caddy
-  3. Create the admin user:
+  2. Create the admin user:
      cd $API_DIR && sudo -u forja DATABASE_URL=$DB_PATH \\
        FORJA_APP_KEY=/etc/forja/app.key node dist/scripts/seed-admin.js
+  3. Access the panel at http://<server-ip> from the local network.
   4. Firewall (optional): example in /usr/share/doc/forja/examples/nftables.conf.example
   5. After creating the first account: /usr/share/forja/check-isolation.sh <slug>
   Known pending items that affect operation: docs/OPERACION.md, appendix A.

@@ -11,4 +11,5 @@ deploy/forja-panel.service lib/systemd/system
 deploy/forja-ingress.service lib/systemd/system
 deploy/check-isolation.sh usr/share/forja
 deploy/deb/etc/sysctl.d/99-forja-userns.conf etc/sysctl.d
+deploy/Caddyfile usr/share/forja
 deploy/deb/doc/nftables.conf.example usr/share/doc/forja/examples

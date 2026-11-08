@@ -15,9 +15,13 @@ import {
   requireSession,
   requireCSRF,
 } from "../auth/middleware.js";
+import { isAccessConfigured } from "../auth/access.js";
 
 export async function authRoutes(app: FastifyInstance): Promise<void> {
-  app.post<{ Body: { password: string } }>(
+  app.get("/api/auth/mode", async () => {
+    return { needsEmail: !isAccessConfigured() };
+  });
+  app.post<{ Body: { email?: string; password: string } }>(
     "/api/auth/login",
     {
       preHandler: [requireAccess],
@@ -29,7 +33,10 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         return reply.code(400).send({ error: { code: "BAD_REQUEST", message: "Password required" } });
       }
 
-      const email = request.accessClaims!.email;
+      const email = request.accessClaims?.email ?? (request.body as { email?: string })?.email;
+      if (!email || typeof email !== "string") {
+        return reply.code(400).send({ error: { code: "BAD_REQUEST", message: "Email required" } });
+      }
       const db = getDB();
       const user = db
         .select()
