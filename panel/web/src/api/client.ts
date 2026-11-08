@@ -24,9 +24,11 @@ export async function api<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+  if (options.body) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (csrfToken && options.method && options.method !== "GET") {
     headers["X-CSRF-Token"] = csrfToken;
