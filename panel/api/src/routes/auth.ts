@@ -74,7 +74,8 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         .where(eq(users.id, user.id))
         .run();
 
-      reply.header("Set-Cookie", buildSessionCookie(sessionId));
+      const secure = isAccessConfigured();
+      reply.header("Set-Cookie", buildSessionCookie(sessionId, secure));
       return reply.send({
         status: "ok",
         user: { id: user.id, email: user.email, role: user.role },
@@ -128,7 +129,8 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         .where(eq(users.id, user.id))
         .run();
 
-      reply.header("Set-Cookie", buildSessionCookie(sessionId));
+      const secure = isAccessConfigured();
+      reply.header("Set-Cookie", buildSessionCookie(sessionId, secure));
       return reply.send({
         status: "ok",
         user: { id: user.id, email: user.email, role: user.role },
