@@ -1,5 +1,13 @@
+forja (0.1.1) unstable; urgency=medium
+
+  * Login con campo de email cuando Cloudflare Access no está configurado.
+  * Caddyfile por defecto para acceso al panel desde la red local por IP.
+  * Permisos de /etc/forja corregidos (0750 root:forja-agent).
+
+ -- Adrián Martíns <adrianmb1125@gmail.com>  Sun, 08 Nov 2026 12:00:00 +0000
+
 forja (0.1.0) unstable; urgency=medium
 
   * Initial Debian package.
 
- -- M4RTINS <m4rtins@users.noreply.github.com>  Sat, 07 Nov 2026 12:00:00 +0000
+ -- Adrián Martíns <adrianmb1125@gmail.com>  Sat, 07 Nov 2026 12:00:00 +0000
